@@ -1,0 +1,7 @@
+PC Game Locker Jun-6-2016
+
+Admin Pass for the Game PC
+
+1. Source file is encrypted with the same pass which means any update would
+   happen on at the allowed time frame.
+2. The executable is bundled nodejs compiled using [[https://www.npmjs.com/package/enclose][Enclose]].
