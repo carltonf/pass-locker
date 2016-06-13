@@ -5,3 +5,33 @@ Admin Pass for the Game PC
 1. Source file is encrypted with the same pass which means any update would
    happen on at the allowed time frame.
 2. The executable is bundled nodejs compiled using [[https://www.npmjs.com/package/enclose][Enclose]].
+
+* How it works
+
+*TODO*
+
+* Possible Hacks
+
+** DONE Fake Baidu Server
+CLOSED: [2016-06-13 Mon 19:09]
+- State "DONE"       from              [2016-06-13 Mon 19:09]
+- [X] Mitigate by looking up Baidu IP with real DNS queries.
+- [X] A more complete solution is to check the baidu certificate with https.
+** DONE Fake DNS
+CLOSED: [2016-06-13 Mon 19:09]
+- State "DONE"       from              [2016-06-13 Mon 19:09]
+Need the aforementioned certificate check to mitigate this issue.
+
+Though harder to fake, it's still relatively easy:
+
+1. Change ARP records to map DNS IPs with local mac address.
+2. Set up the fake DNS entries for baidu, which leads to a fake http server.
+
+** DONE Tempered TZ
+CLOSED: [2016-06-13 Mon 19:09]
+- State "DONE"       from              [2016-06-13 Mon 19:09]
+Set TZ like the following:
+: TZ='Asia/Shanghai'; export TZ
+This trick can extend the allowed access window from several hours to about 2 days.
+
+Since June-13, locale time zone offset is checked and it's enforced to be 'GMT+8'
