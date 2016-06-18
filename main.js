@@ -19,14 +19,14 @@ if ( timeZoneOffset !== 8 ) {
 
 // allowed day and hours
 function isAllowedTime (curTime) {
-  const SATURDAY = 6;           // Saturday
+  const WEEKDAY = 0;           // Sunday
   const HOURS = [5, 6, 7];      // Only Early morning
-  console.log(`** Allowed time is ${HOURS[0]}-${HOURS[HOURS.length -1 ] + 1} am on Saturday(${SATURDAY}) *CST, GMT+8*.`);
+  console.log(`** Allowed time is ${HOURS[0]}-${HOURS[HOURS.length -1 ] + 1} am on Sunday(${WEEKDAY}) *CST, GMT+8*.`);
 
   var curDay = curTime.getDay();
   var curHour = curTime.getHours();
 
-  return (curDay === SATURDAY && HOURS.indexOf(curHour) > -1);
+  return (curDay === WEEKDAY && HOURS.indexOf(curHour) > -1);
 }
 
 function validateServerComm(res) {
