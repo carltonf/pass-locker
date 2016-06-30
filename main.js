@@ -1,56 +1,40 @@
 // NOTE: every pass update should update VERSION_INFO, a good practice as we are
 // doing something uncommon here.
-var ADMIN_PASS = 'xxxxxxxxxxxxxxxxxxxx';
-var VERSION_INFO = 'Jun-13-2016';
-console.log(`** Updated at ${VERSION_INFO}.`);
+var VERSION_INFO = 'Jun-30-2016';
+console.log(`** Pass-Locker: Updated at ${VERSION_INFO}.`);
+
+var AntiSpoof = require('./antiSpoof');
+var ADMIN_PASS = require('./PASS');
+var CM = require('./config-manager');
 
 // NOTE: use https to better fend off spoofing
 var https = require('https');
 var dns = require('dns');
 
-// NOTE: Verify that we are not sproofing Time Zone, as the rest call depends
-// on locale. UTC doesn't make sense here as we need local time
-var timeZoneOffset = - ( (new Date()).getTimezoneOffset() / 60 );
-if ( timeZoneOffset !== 8 ) {
-  console.error(`* Error: Time zone is incorrect: UTC + (${timeZoneOffset})`);
-  console.error('* Abort: environment is tempered.');
-  process.exit(0);
+var cmd = process.argv.splice(process.execArgv.length + 2)[0];
+
+switch (cmd) {
+  case 'status':
+    console.log('* Current Task/Reward status: ');
+    CM.status();
+    process.exit(0);
+  break;
+  case 'access':
+    console.log('* Request access to Admin Pass: ');
+    CM.requestAccess();
+    process.exit(0);
+  break;
+  case 'checkin':
+  // NOTE Most code for antiSpoof only needed at this stage
+    console.log('* Tries to checkIn');
+  break;
+  default:
+    console.info('Usage: status|access|checkin');
+    process.exit(0);
 }
 
-// allowed day and hours
-function isAllowedTime (curTime) {
-  const WEEKDAY = 0;           // Sunday
-  const HOURS = [5, 6, 7];      // Only Early morning
-  console.log(`** Allowed time is ${HOURS[0]}-${HOURS[HOURS.length -1 ] + 1} am on Sunday(${WEEKDAY}) *CST, GMT+8*.`);
-
-  var curDay = curTime.getDay();
-  var curHour = curTime.getHours();
-
-  return (curDay === WEEKDAY && HOURS.indexOf(curHour) > -1);
-}
-
-function validateServerComm(res) {
-  if (res.statusCode !== 200) {
-    console.error(`* Network error: ${res.statusCode}`);
-    return false;
-  }
-
-  // NOTE is `authorized` field alone enough?
-  if ( !res.socket.authorized ) {
-    console.error(`* ERROR: The Server is NOT authorized. Something weird happened.`);
-    return false;
-  }
-  return true;
-}
-
-// FIX: the following DNS check is basically useless, with HTTPS we might not
-// need DNS checking anymore.
-function isSuspiciousDNSRes(addrs) {
-  const wrongAddrs = ["127.0.0.1", "108.61.162.93"];
-
-  return addrs.some( addr => (wrongAddrs.indexOf(addr) > -1) );
-}
-
+// NOTE the checkIn branch
+AntiSpoof.assertCSTTZ();
 
 callback = function httpsReqCB (res) {
   var str = '';
@@ -60,14 +44,15 @@ callback = function httpsReqCB (res) {
   });
 
   res.on('end', function () {
-    if ( ! validateServerComm(res) ) {
+    if ( ! AntiSpoof.isValidServerComm(res) ) {
       return;
     }
 
     var curTime = new Date(res.headers.date);
     console.log(`* Current time: ${curTime}`);
-    if (isAllowedTime(curTime)) {
-      console.log('Pass: ' + ADMIN_PASS);
+    if (AntiSpoof.isCheckInHour(curTime)) {
+      CM.checkIn(curTime);
+      process.exit(0);
     }
     else {
       console.log('* Error: wrong time. You are not allowed.');
@@ -92,7 +77,7 @@ dns.resolve4(REMOTE_SITE, (err, addrs) => {
     throw err;
   }
 
-  if ( isSuspiciousDNSRes(addrs) ) {
+  if ( AntiSpoof.isSuspiciousDNSRes(addrs) ) {
     console.log('* DNS query contains suspicious result.');
     return;
   }
