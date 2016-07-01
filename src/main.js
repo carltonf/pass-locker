@@ -1,6 +1,6 @@
 // NOTE: every pass update should update VERSION_INFO, a good practice as we are
 // doing something uncommon here.
-var VERSION_INFO = 'Jun-30-2016';
+var VERSION_INFO = 'Jul-1-2016';
 console.log(`** Pass-Locker: Updated at ${VERSION_INFO}.`);
 
 var AntiSpoof = require('./antiSpoof');

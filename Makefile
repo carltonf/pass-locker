@@ -1,18 +1,13 @@
-# TODO create a script that automatically fill in real password
+SRCS := $(wildcard src/*.js)
+ENTRY := src/main.js
+
 all: pass-locker
 
 runbin: pass-locker
 	@./pass-locker
 
 runjs:
-	@node ./main.js
-
-SRCS := antiSpoof.js \
-	config-manager.js \
-	main.js \
-	PASS.js \
-	simpleJSONCryptor.js
-ENTRY := main.js
+	@node ${ENTRY}
 
 pass-locker: ${SRCS}
 	@echo "* Enclose: build x64 executables"
