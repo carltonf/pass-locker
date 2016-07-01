@@ -7,9 +7,13 @@ runbin: pass-locker
 runjs:
 	@node ./main.js
 
-# NOTE: for now a copy of main.js should be placed in build directory with password
-# It gets removed immediately
-pass-locker: build/main.js
+SRCS := antiSpoof.js \
+	config-manager.js \
+	main.js \
+	PASS.js \
+	simpleJSONCryptor.js
+ENTRY := main.js
+
+pass-locker: ${SRCS}
 	@echo "* Enclose: build x64 executables"
-	@enclose -a x64 $^ -o $@
-	@rm -rfv $^
+	@enclose -x ${ENTRY} -o $@

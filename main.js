@@ -7,7 +7,7 @@ var AntiSpoof = require('./antiSpoof');
 var ADMIN_PASS = require('./PASS');
 var CM = require('./config-manager');
 
-// NOTE: use https to better fend off spoofing
+// NOTE: use https to better fend off spoofin.
 var https = require('https');
 var dns = require('dns');
 
@@ -20,20 +20,28 @@ switch (cmd) {
     process.exit(0);
   break;
   case 'access':
-    console.log('* Request access to Admin Pass: ');
-    CM.requestAccess();
+    console.log('* Request access to Admin Pass...');
+    if (CM.requestAccess()) {
+      console.log(`[PASS] ${ADMIN_PASS}`);
+    }
     process.exit(0);
   break;
   case 'checkin':
-  // NOTE Most code for antiSpoof only needed at this stage
-    console.log('* Tries to checkIn');
+    // NOTE Most code for antiSpoof only needed at this stage
+    console.log('* Tries to checkin...');
+    // NOTE we can use local time to fail quick
+    if ( !AntiSpoof.isCheckInHour(new Date()) ) {
+      console.log('* Error: wrong time. You are not allowed.');
+      process.exit(0);
+    }
   break;
   default:
     console.info('Usage: status|access|checkin');
     process.exit(0);
 }
 
-// NOTE the checkIn branch
+// TODO the checkIn branch: most code below is needed for antispoof purpose
+// Factor them out.
 AntiSpoof.assertCSTTZ();
 
 callback = function httpsReqCB (res) {

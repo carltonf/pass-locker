@@ -1,11 +1,6 @@
-/*
- TODOs:
- 1. Config file management.
- 2. Encryption.
- */
 const fs = require('fs');
-// const cryptor = require('./simpleJSONCryptor');
-const cryptor = require('./dumbJSONCryptor');
+const cryptor = require('./simpleJSONCryptor');
+// const cryptor = require('./dumbJSONCryptor');
 
 // NOTE: encrypted JSON file
 const CONFIG_FILE = './pass-locker-config.json';
@@ -49,7 +44,6 @@ catch (e){
 }
 
 if ( !configJSON ) {
-  console.log('* Read JSON from config file.');
   configJSON = cryptor.decryptJSON(fs.readFileSync(CONFIG_FILE, { encoding: 'utf8' }));
   // NOTE: enforce data types
   configJSON.numOfChances = parseInt(configJSON.numOfChances);
@@ -61,9 +55,9 @@ else {
   _writeConfig();
 }
 
-function _resetBatch () {
+function _resetBatch (date) {
   configJSON.batchCount = 1;
-  configJSON.lastCheckIn = new Date();
+  configJSON.lastCheckIn = date;
 }
 function _punish (failedDays) {
   if ( configJSON.numOfChances >= failedDays ) {
@@ -82,27 +76,42 @@ function checkIn(curDate) {
   var lastCheckIn = configJSON.lastCheckIn;
   // NOTE the first time for checkIn
   if ( !lastCheckIn ) {
-    console.log('* This is your first time checkin.')
-    _resetBatch();
+    console.log('* [OK] This is your first time checkin.')
+    _resetBatch(curDate);
   }
   else {
-    if (curDate.getDay() === lastCheckIn.getDay()) {
-      console.log('* You havve already checked in today. Do nothing.')
+    // NOTE crude way to calculate hours
+    var hoursElapsed = Math.floor( (curDate - lastCheckIn) / (60 * 60 * 1000) );
+    // NOTE the right time to check in is between 23 hours to 25 hours
+    if (hoursElapsed <= 0) {
+      console.log(`* The last checkin date: ${lastCheckIn}`);
+      console.log('* [FAILED] Did you just time traveled to the past ;P');
       return;
     }
-    // NOTE A very rough approach to calc the elapsed days
-    // use 25 hours, as it's ok to checkin every 23 - 25 hours. 
-    var daysElapsed = Math.floor( (curDate - lastCheckIn) / (25 * 60 * 60 * 1000) );
-    if ( daysElasped > 0 ) {
+    else if (hoursElapsed < 23) {
+      console.log('* [FAILED] You have already checked in today. Do nothing.');
+      return;
+    }
+    else if (hoursElapsed > 25) {
+      console.log('* [WARNING] You have failed to checkin consecuitively.');
       // NOTE More than a day has passed, reset
-      _resetBatch();
+      _resetBatch(curDate);
       // And punish
-      _punish();
+      _punish(hoursElapsed/24);
     }
     else {
+      console.log('* [OK] Successfully checkin.')
       // NOTE normal consecutive check in
       configJSON.batchCount++;
-      configJSON.lastCheckIn = new Date();
+      configJSON.lastCheckIn = curDate;
+      // NOTE calculate chances
+      var nextChanceInterval = ALG_PARAMS.INTERVAL + configJSON.batchExtension;
+      if (configJSON.batchCount === nextChanceInterval) {
+        console.log('* Congratulations! You have just earned a chance!')
+        configJSON.numOfChances++;
+        configJSON.batchCount = 0;
+        configJSON.batchExtension = 0;
+      }
     }
   }
   
@@ -116,16 +125,15 @@ function status() {
 
 function requestAccess() {
   if ( configJSON.numOfChances === 0 ) {
-    console.log('* No chances are avaible.');
-    status();
-    return;
+    console.log('* No chances are available.');
+    return false;
   }
 
   configJSON.numOfChances--;
   _writeConfig();
-  status();
   console.log('* Access Granted.');
   console.log(`* Remaining number of chances is ${configJSON.numOfChances}`);
+  return true;
 }
 
 module.exports = {

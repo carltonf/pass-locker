@@ -1,7 +1,8 @@
-// A tool for testing 'config-manager.js'
+// NOTE A tool for testing 'config-manager.js'
 var CM = require('./config-manager');
-
-var cmd = process.argv.splice(process.execArgv.length + 2)[0];
+var args = process.argv.splice(process.execArgv.length + 2);
+var cmd = args[0];
+var argDate = args[1];
 
 switch (cmd) {
   case 'status':
@@ -15,10 +16,12 @@ switch (cmd) {
     process.exit(0);
   break;
   case 'checkin':
-  // NOTE Most code for antiSpoof only needed at this stage
     console.log('* Tries to checkIn');
+    console.log(`Set argDate: ${argDate}`);
+    argDate = (argDate && (new Date(argDate))) || (new Date());
+    CM.checkIn(argDate);
   break;
   default:
-    console.info('Usage: status|access|checkin');
+    console.info('Usage: status|access|checkin <date-str>');
     process.exit(0);
 }

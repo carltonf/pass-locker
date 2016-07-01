@@ -16,7 +16,7 @@ function isCheckInHour (curTime) {
   var curDay = curTime.getDay();
   var curHour = curTime.getHours();
 
-  return (curDay === WEEKDAY && HOURS.indexOf(curHour) > -1);
+  return (HOURS.indexOf(curHour) > -1);
 }
 
 function isValidServerComm(res) {
